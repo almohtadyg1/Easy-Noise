@@ -1,4 +1,3 @@
-```markdown
 # 🎵 Easy Noise
 
 A modern, minimalistic web application that generates different types of noise (White, Pink, Brown, Blue, Violet, Gray, Red, Green) for relaxation, focus, or sleep.  
@@ -32,4 +31,3 @@ This project is **open-source** and free to use.
 
 ### Author
 Built by [Almohtady Bellah](https://github.com/almohtadyg1) – experimenting with sound and web design.
-```
