@@ -6,6 +6,9 @@
     <title>Static Noise Player</title>
     <link rel="icon" type="image/svg+xml" sizes="any" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>"/>
     
+    <!-- Monetag MultiTag Script -->
+    
+    
     <style>
         * {
             margin: 0;
@@ -78,48 +81,6 @@
             font-size: 2.8em;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
             font-weight: 300;
-        }
-
-        .notification-banner {
-            background: rgba(255, 255, 255, 0.15);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 30px;
-            text-align: center;
-            color: white;
-            transition: all 0.3s ease;
-        }
-
-        .notification-banner.hidden {
-            display: none;
-        }
-
-        .notification-banner.success {
-            background: rgba(76, 175, 80, 0.2);
-            border-color: rgba(76, 175, 80, 0.4);
-        }
-
-        .notification-banner.error {
-            background: rgba(244, 67, 54, 0.2);
-            border-color: rgba(244, 67, 54, 0.4);
-        }
-
-        .enable-notifications-btn {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-top: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .enable-notifications-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
         }
 
         .controls {
@@ -402,16 +363,6 @@
     <div class="container">
         <h1>🎵 Static Noise Player</h1>
         
-        <!-- Notification Banner -->
-        <div id="notificationBanner" class="notification-banner">
-            <div id="notificationMessage">
-                📢 Get notified when your favorite noise sessions start!
-            </div>
-            <button id="enableNotifications" class="enable-notifications-btn">
-                🔔 Enable Notifications
-            </button>
-        </div>
-        
         <div class="controls">
             <div class="volume-control">
                 <span>🔊</span>
@@ -430,185 +381,11 @@
     </div>
 
     <script>
-        class PushNotificationManager {
-            constructor() {
-                this.isSupported = 'serviceWorker' in navigator && 'PushManager' in window;
-                this.permission = Notification.permission;
-                this.init();
-            }
-
-            init() {
-                this.updateNotificationBanner();
-                this.setupEventListeners();
-                
-                if (this.isSupported) {
-                    this.registerServiceWorker();
-                }
-            }
-
-            async registerServiceWorker() {
-                try {
-                    // Create service worker inline
-                    const swCode = `
-                        self.addEventListener('push', function(event) {
-                            const options = {
-                                body: event.data ? event.data.text() : 'Your noise session is ready!',
-                                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🎵</text></svg>',
-                                badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔔</text></svg>',
-                                tag: 'noise-player',
-                                requireInteraction: true,
-                                actions: [
-                                    { action: 'play', title: '▶️ Play' },
-                                    { action: 'dismiss', title: '❌ Dismiss' }
-                                ]
-                            };
-                            
-                            event.waitUntil(
-                                self.registration.showNotification('🎵 Noise Player', options)
-                            );
-                        });
-
-                        self.addEventListener('notificationclick', function(event) {
-                            event.notification.close();
-                            
-                            if (event.action === 'play') {
-                                event.waitUntil(
-                                    clients.openWindow(self.location.origin)
-                                );
-                            }
-                        });
-                    `;
-
-                    const blob = new Blob([swCode], { type: 'application/javascript' });
-                    const swUrl = URL.createObjectURL(blob);
-                    
-                    const registration = await navigator.serviceWorker.register(swUrl);
-                    console.log('Service Worker registered successfully:', registration);
-                } catch (error) {
-                    console.error('Service Worker registration failed:', error);
-                }
-            }
-
-            setupEventListeners() {
-                const enableBtn = document.getElementById('enableNotifications');
-                enableBtn.addEventListener('click', () => this.requestPermission());
-            }
-
-            async requestPermission() {
-                if (!this.isSupported) {
-                    this.showMessage('Push notifications are not supported in this browser.', 'error');
-                    return false;
-                }
-
-                try {
-                    const permission = await Notification.requestPermission();
-                    this.permission = permission;
-                    
-                    if (permission === 'granted') {
-                        this.showMessage('🎉 Notifications enabled! You\'ll receive updates about your noise sessions.', 'success');
-                        this.scheduleWelcomeNotification();
-                    } else if (permission === 'denied') {
-                        this.showMessage('❌ Notifications blocked. You can enable them in your browser settings.', 'error');
-                    } else {
-                        this.showMessage('⚠️ Notification permission dismissed.', 'error');
-                    }
-                    
-                    this.updateNotificationBanner();
-                    return permission === 'granted';
-                } catch (error) {
-                    console.error('Error requesting notification permission:', error);
-                    this.showMessage('❌ Error enabling notifications.', 'error');
-                    return false;
-                }
-            }
-
-            updateNotificationBanner() {
-                const banner = document.getElementById('notificationBanner');
-                const message = document.getElementById('notificationMessage');
-                const button = document.getElementById('enableNotifications');
-
-                if (!this.isSupported) {
-                    message.textContent = '❌ Push notifications are not supported in this browser.';
-                    button.style.display = 'none';
-                    banner.className = 'notification-banner error';
-                } else if (this.permission === 'granted') {
-                    banner.className = 'notification-banner hidden';
-                } else if (this.permission === 'denied') {
-                    message.textContent = '🔒 Notifications are blocked. Enable them in your browser settings to get updates.';
-                    button.style.display = 'none';
-                    banner.className = 'notification-banner error';
-                } else {
-                    message.textContent = '📢 Get notified when your favorite noise sessions start!';
-                    button.style.display = 'inline-block';
-                    banner.className = 'notification-banner';
-                }
-            }
-
-            showMessage(text, type = 'success') {
-                const banner = document.getElementById('notificationBanner');
-                const message = document.getElementById('notificationMessage');
-                const button = document.getElementById('enableNotifications');
-
-                message.textContent = text;
-                button.style.display = 'none';
-                banner.className = `notification-banner ${type}`;
-
-                setTimeout(() => {
-                    if (this.permission === 'granted') {
-                        banner.className = 'notification-banner hidden';
-                    } else {
-                        this.updateNotificationBanner();
-                    }
-                }, 5000);
-            }
-
-            scheduleWelcomeNotification() {
-                // Send a welcome notification after 3 seconds
-                setTimeout(() => {
-                    this.sendNotification('Welcome to Static Noise Player! 🎵', 'Your notifications are now enabled. Enjoy your ambient sounds!');
-                }, 3000);
-            }
-
-            sendNotification(title, body, options = {}) {
-                if (this.permission !== 'granted') return;
-
-                const defaultOptions = {
-                    body: body,
-                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🎵</text></svg>',
-                    badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔔</text></svg>',
-                    tag: 'noise-player',
-                    requireInteraction: false,
-                    ...options
-                };
-
-                new Notification(title, defaultOptions);
-            }
-
-            // Method to send notifications for specific events
-            sendNoiseStartNotification(noiseName) {
-                this.sendNotification(
-                    '🎵 Noise Started',
-                    `${noiseName} is now playing. Perfect for focus and relaxation!`,
-                    { requireInteraction: false }
-                );
-            }
-
-            sendSessionCompleteNotification() {
-                this.sendNotification(
-                    '✨ Session Complete',
-                    'Your ambient noise session has ended. How was your focus time?',
-                    { requireInteraction: true }
-                );
-            }
-        }
-
         class NoisePlayer {
             constructor() {
                 this.audioContext = null;
                 this.noises = new Map();
                 this.globalVolume = 0.5;
-                this.notificationManager = new PushNotificationManager();
-                this.sessionStartTime = null;
                 this.noiseTypes = [
                     {
                         name: 'White Noise',
@@ -760,15 +537,6 @@
                 
                 this.noises.set(noiseType, { source, gainNode });
                 this.updateNoiseCardState(noiseType, 'playing');
-
-                // Send notification when noise starts
-                const noiseName = this.noiseTypes.find(n => n.name.toLowerCase().replace(' ', '') === noiseType)?.name || noiseType;
-                this.notificationManager.sendNoiseStartNotification(noiseName);
-
-                // Track session start
-                if (!this.sessionStartTime) {
-                    this.sessionStartTime = Date.now();
-                }
             }
 
             stopNoise(noiseType) {
@@ -777,15 +545,6 @@
                     noise.source.stop();
                     this.noises.delete(noiseType);
                     this.updateNoiseCardState(noiseType, 'stopped');
-
-                    // Check if this was the last noise and session is ending
-                    if (this.noises.size === 0 && this.sessionStartTime) {
-                        const sessionDuration = (Date.now() - this.sessionStartTime) / 1000 / 60; // minutes
-                        if (sessionDuration >= 5) { // Only notify for sessions longer than 5 minutes
-                            this.notificationManager.sendSessionCompleteNotification();
-                        }
-                        this.sessionStartTime = null;
-                    }
                 }
             }
 
